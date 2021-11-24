@@ -54,6 +54,8 @@ from .strings import (
     PSTALLNMEAOFF,
     PSTMINUBXON,
     PSTALLUBXON,
+    PSTALLMONONZED,
+    PSTALLRXMONZED,
     PSTALLUBXOFF,
     PSTALLINFON,
     PSTALLINFOFF,
@@ -82,6 +84,8 @@ PRESET_COMMMANDS = [
     PSTALLLOGON,
     PSTALLLOGOFF,
     PSTALLMONON,
+    PSTALLMONONZED,
+    PSTALLRXMONZED,
     PSTALLMONOFF,
     PSTALLRXMON,
     PSTALLRXMOFF,
@@ -238,15 +242,19 @@ class UBX_PRESET_Frame(Frame):
             elif self._preset_command == PSTALLINFOFF:
                 self._do_set_inf(False)
             elif self._preset_command == PSTALLLOGON:
-                self._do_set_log(4)
+                self._do_set_log(1)
             elif self._preset_command == PSTALLLOGOFF:
                 self._do_set_log(0)
             elif self._preset_command == PSTALLMONON:
-                self._do_set_mon(4)
+                self._do_set_mon(1)
+            elif self._preset_command == PSTALLRXMONZED:
+                self._do_set_mon_zed(1)
             elif self._preset_command == PSTALLMONOFF:
                 self._do_set_mon(0)
             elif self._preset_command == PSTALLRXMON:
-                self._do_set_rxm(4)
+                self._do_set_rxm(1)
+            elif self._preset_command == PSTALLRXMONZED:
+                self._do_set_rxm_zed(4)
             elif self._preset_command == PSTALLRXMOFF:
                 self._do_set_rxm(0)
             elif self._preset_command == PSTPOLLPORT:
@@ -359,6 +367,21 @@ class UBX_PRESET_Frame(Frame):
             if msgtype[0:1] == b"\x0A":
                 self._do_cfgmsg(msgtype, msgrate)
 
+    def _do_set_mon_zed(self, msgrate):
+        """
+        Turn on all device monitoring messages MON for ZED-F9P receiver.
+
+        :param int msgrate: message rate (i.e. every nth position solution)
+        """
+        MSGS = {
+            b"\x0a\x38": "MON-RF",
+            b"\x0a\x31": "MON-SPAN",
+            b"\x0a\x08": "MON-TXBUF",
+            b"\x0a\x04": "MON-VER",
+        }
+        for msgtype in MSGS:
+            self._do_cfgmsg(msgtype, msgrate)
+
     def _do_set_rxm(self, msgrate):
         """
         Turn on all device receiver management messages RXM.
@@ -369,6 +392,20 @@ class UBX_PRESET_Frame(Frame):
         for msgtype in UBX_MSGIDS:
             if msgtype[0:1] == b"\x02":
                 self._do_cfgmsg(msgtype, msgrate)
+
+    def _do_set_rxm_zed(self, msgrate):
+        """
+        Turn on all device receiver management messages RXM.
+
+        :param int msgrate: message rate (i.e. every nth position solution)
+        """
+        MSGS = {
+            b"\x02\x14": "RXM-MEASX",
+            b"\x02\x15": "RXM-RAWX",
+            b"\x02\x13": "RXM-SFRBX",
+        }
+        for msgtype in MSGS:
+            self._do_cfgmsg(msgtype, msgrate)
 
     def _do_set_minnmea(self):
         """
